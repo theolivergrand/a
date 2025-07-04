@@ -16,6 +16,19 @@ from PIL import Image, ImageDraw
 import google.generativeai as genai
 from google.cloud import secretmanager
 
+# Configuration import
+try:
+    from config import PROJECT_ID, SECRET_ID, APP_TITLE, APP_DESCRIPTION, MODEL_NAME
+except ImportError:
+    # Fallback values if config.py doesn't exist
+    PROJECT_ID = "ai-agent-test-464915"
+    SECRET_ID = "Gemini-Api"
+    APP_TITLE = "AI UI/UX Analyzer"
+    APP_DESCRIPTION = "Загрузите скриншот пользовательского интерфейса, и ИИ определит и пронумерует интерактивные элементы."
+    MODEL_NAME = "gemini-1.5-flash"
+    print("⚠️  Файл config.py не найден. Используются значения по умолчанию.")
+    print("📝 Скопируйте config_example.py в config.py и заполните ваши настройки.")
+
 # This will be our system prompt
 SYSTEM_PROMPT = """
 You are an expert in UI/UX design. Your task is to analyze an image of a user interface and identify key interactive elements.
@@ -38,10 +51,6 @@ Example:
   ]
 }
 """
-
-# Placeholder for the function to get the API key from Secret Manager
-PROJECT_ID = "ai-agent-test-464915"
-SECRET_ID = "Gemini-Api"
 
 
 def get_api_key(project_id, secret_id, version_id="latest"):
@@ -226,7 +235,7 @@ def analyze_ui_elements(image):
         genai.configure(api_key=api_key)
 
         # 3. Create the model instance
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel(MODEL_NAME)
 
         # 4. Create a prompt with the system prompt and the user image
         prompt_parts = [
@@ -294,11 +303,9 @@ def main():
     print("Launching Gradio app...")
 
     # Gradio Interface
-    with gr.Blocks(title="AI UI/UX Analyzer") as demo:
-        gr.Markdown("# 🎯 AI UI/UX Analyzer")
-        gr.Markdown(
-            "Загрузите скриншот пользовательского интерфейса, и ИИ определит и пронумерует интерактивные элементы."
-        )
+    with gr.Blocks(title=APP_TITLE) as demo:
+        gr.Markdown(f"# 🎯 {APP_TITLE}")
+        gr.Markdown(APP_DESCRIPTION)
         
         with gr.Row():
             image_input = gr.Image(type="pil", label="📱 Загрузите скриншот UI")
