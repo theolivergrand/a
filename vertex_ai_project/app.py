@@ -125,12 +125,15 @@ def create_interactive_html(image, json_data):
     
     # Create HTML with interactive areas - SHARP BORDERS for ML training
     html_content = f"""
-    <div style="position: relative; width: {img_width}px; height: {img_height}px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+    <div id="interactive-container" style="position: relative; width: {img_width}px; height: {img_height}px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
         <img src="data:image/png;base64,{img_str}" 
              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
              id="ui-image" />
         <div id="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
     """
+    
+    # Store element data as JSON for JavaScript
+    elements_data = []
     
     # Add interactive areas for each element using absolute pixel values
     if isinstance(json_data.get("elements"), list):
@@ -140,15 +143,20 @@ def create_interactive_html(image, json_data):
                 description = element["description"]
                 element_id = element.get("id", "?")
                 
+                # Store element data
+                elements_data.append({
+                    "id": element_id,
+                    "description": description
+                })
+                
                 left_px = box[0]
                 top_px = box[1]
                 width_px = box[2] - box[0]
                 height_px = box[3] - box[1]
 
                 # SHARP BORDERS - NO TRANSPARENCY for ML training
-                escaped_description = json.dumps(description)
                 html_content += f"""
-                <div class="ui-element" data-element-id="{element_id}" data-description="{description}"
+                <div class="ui-element ui-element-{element_id}" 
                      style="position: absolute; 
                             left: {left_px}px; 
                             top: {top_px}px; 
@@ -165,15 +173,12 @@ def create_interactive_html(image, json_data):
                             font-weight: bold;
                             font-size: 16px;
                             color: #00ff00;
-                            text-shadow: 1px 1px 2px rgba(0,0,0,0.9);"
-                     onmouseover="showTooltip(event, {escaped_description}, {element_id})"
-                     onmouseout="hideTooltip()"
-                     onclick="selectElement({element_id}, {escaped_description})">
+                            text-shadow: 1px 1px 2px rgba(0,0,0,0.9);">
                     {element_id}
                 </div>
                 """
     
-    html_content += """
+    html_content += f"""
         </div>
         <div id="tooltip" style="position: absolute; 
                                  background: rgba(0, 0, 0, 0.95); 
@@ -189,96 +194,126 @@ def create_interactive_html(image, json_data):
                                  border: 1px solid #333;">
         </div>
     </div>
-
+    
     <script>
+    // Wait for DOM to be ready
+    setTimeout(function() {{
+        console.log('Initializing interactive elements...');
+        const elementsData = {json.dumps(elements_data)};
         let selectedElementId = null;
-        let gradioSelectedText = null;
-
-        function showTooltip(event, description, elementId) {
+        
+        function initializeInteractivity() {{
+            const container = document.getElementById('interactive-container');
+            if (!container) {{
+                console.log('Container not found, retrying...');
+                setTimeout(initializeInteractivity, 100);
+                return;
+            }}
+            
+            console.log('Container found, setting up interactions...');
             const tooltip = document.getElementById('tooltip');
-            tooltip.innerHTML = `<strong>Элемент ${elementId}:</strong><br>${description}`;
-            tooltip.style.display = 'block';
             
-            // Position tooltip near cursor
-            const rect = event.currentTarget.getBoundingClientRect();
-            const container = event.currentTarget.closest('div[style*="position: relative"]');
-            if (!container) return;
-            const containerRect = container.getBoundingClientRect();
-            
-            tooltip.style.left = (rect.left - containerRect.left + rect.width + 10) + 'px';
-            tooltip.style.top = (rect.top - containerRect.top) + 'px';
-
-            // Enhanced hover effect with sharp borders
-            if (elementId !== selectedElementId) {
-                event.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)';
-                event.currentTarget.style.borderWidth = '4px';
-                event.currentTarget.style.borderColor = '#00ff00';
-                event.currentTarget.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.5)';
-            }
-        }
-        
-        function hideTooltip() {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.display = 'none';
-            
-            // Remove hover highlight if not selected
-            const elements = document.querySelectorAll('.ui-element');
-            elements.forEach(el => {
-                const id = parseInt(el.textContent.trim());
-                if (id !== selectedElementId) {
-                    el.style.backgroundColor = 'rgba(0, 255, 0, 0.05)';
-                    el.style.borderWidth = '3px';
-                    el.style.borderColor = '#00ff00';
-                    el.style.boxShadow = 'none';
-                }
-            });
-        }
-        
-        function selectElement(elementId, description) {
-            // Clear previous selection
-            const elements = document.querySelectorAll('.ui-element');
-            elements.forEach(el => {
-                el.style.backgroundColor = 'rgba(0, 255, 0, 0.05)';
-                el.style.borderWidth = '3px';
-                el.style.borderColor = '#00ff00';
-                el.style.boxShadow = 'none';
-            });
-
-            if (selectedElementId === elementId) {
-                // Deselect if clicking the same element
-                selectedElementId = null;
-                gradioSelectedText = null;
-                // Trigger Gradio update
-                document.dispatchEvent(new CustomEvent('elementDeselected'));
-            } else {
-                // Select new element
-                selectedElementId = elementId;
-                gradioSelectedText = `Элемент ${elementId}: ${description}`;
+            // Add event listeners to all elements
+            elementsData.forEach(function(elementData) {{
+                const selector = '.ui-element-' + elementData.id;
+                const elements = container.querySelectorAll(selector);
+                console.log('Found ' + elements.length + ' elements with selector: ' + selector);
                 
-                // Highlight selected element with sharp red border
-                const selectedEl = Array.from(elements).find(el => 
-                    parseInt(el.textContent.trim()) === elementId
-                );
-                if (selectedEl) {
-                    selectedEl.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-                    selectedEl.style.borderWidth = '4px';
-                    selectedEl.style.borderColor = '#ff0000';
-                    selectedEl.style.boxShadow = '0 0 15px rgba(255, 0, 0, 0.6)';
-                }
-                
-                // Trigger Gradio update
-                document.dispatchEvent(new CustomEvent('elementSelected', {
-                    detail: { elementId, description }
-                }));
-            }
-        }
+                elements.forEach(function(element) {{
+                    // Remove any existing listeners
+                    const newElement = element.cloneNode(true);
+                    element.parentNode.replaceChild(newElement, element);
+                    
+                    // Hover events
+                    newElement.addEventListener('mouseenter', function(e) {{
+                        console.log('Mouse enter on element ' + elementData.id);
+                        if (tooltip) {{
+                            tooltip.innerHTML = '<strong>Элемент ' + elementData.id + ':</strong><br>' + elementData.description;
+                            tooltip.style.display = 'block';
+                            
+                            const rect = e.target.getBoundingClientRect();
+                            const containerRect = container.getBoundingClientRect();
+                            
+                            tooltip.style.left = (rect.left - containerRect.left + rect.width + 10) + 'px';
+                            tooltip.style.top = (rect.top - containerRect.top) + 'px';
+                        }}
+                        
+                        if (elementData.id !== selectedElementId) {{
+                            e.target.style.backgroundColor = 'rgba(0, 255, 0, 0.15)';
+                            e.target.style.borderWidth = '4px';
+                            e.target.style.borderColor = '#00ff00';
+                            e.target.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.5)';
+                        }}
+                    }});
+                    
+                    newElement.addEventListener('mouseleave', function(e) {{
+                        console.log('Mouse leave on element ' + elementData.id);
+                        if (tooltip) {{
+                            tooltip.style.display = 'none';
+                        }}
+                        
+                        if (elementData.id !== selectedElementId) {{
+                            e.target.style.backgroundColor = 'rgba(0, 255, 0, 0.05)';
+                            e.target.style.borderWidth = '3px';
+                            e.target.style.borderColor = '#00ff00';
+                            e.target.style.boxShadow = 'none';
+                        }}
+                    }});
+                    
+                    // Click event
+                    newElement.addEventListener('click', function(e) {{
+                        console.log('Click on element ' + elementData.id);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Clear all selections
+                        container.querySelectorAll('.ui-element').forEach(function(el) {{
+                            el.style.backgroundColor = 'rgba(0, 255, 0, 0.05)';
+                            el.style.borderWidth = '3px';
+                            el.style.borderColor = '#00ff00';
+                            el.style.boxShadow = 'none';
+                        }});
+                        
+                        if (selectedElementId === elementData.id) {{
+                            // Deselect
+                            console.log('Deselecting element ' + elementData.id);
+                            selectedElementId = null;
+                            
+                            // Update Gradio component if it exists
+                            const infoOutput = document.querySelector('#element_info_output textarea');
+                            if (infoOutput) {{
+                                infoOutput.value = 'Нажмите на элемент, чтобы увидеть его описание.';
+                                infoOutput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                            }}
+                        }} else {{
+                            // Select
+                            console.log('Selecting element ' + elementData.id);
+                            selectedElementId = elementData.id;
+                            e.target.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                            e.target.style.borderWidth = '4px';
+                            e.target.style.borderColor = '#ff0000';
+                            e.target.style.boxShadow = '0 0 15px rgba(255, 0, 0, 0.6)';
+                            
+                            // Update Gradio component if it exists
+                            const infoOutput = document.querySelector('#element_info_output textarea');
+                            if (infoOutput) {{
+                                infoOutput.value = 'Элемент ' + elementData.id + ': ' + elementData.description;
+                                infoOutput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                            }}
+                        }}
+                    }});
+                }});
+            }});
+            
+            console.log('Initialization complete!');
+        }}
         
-        // Function to get selected element info for Gradio
-        function getSelectedElementInfo() {
-            return gradioSelectedText || "Нажмите на элемент, чтобы увидеть его описание.";
-        }
+        // Start initialization
+        initializeInteractivity();
+    }}, 500);  // Delay to ensure Gradio has rendered
     </script>
     """
+    
     return html_content
 
 
@@ -289,13 +324,22 @@ def handle_image_upload(image):
     """
     if image is None:
         # If image is cleared, disable the button
+        print("⚠️ Получено пустое изображение")
         return None, gr.update(interactive=False), "Загрузите изображение для анализа."
     
-    print(f"🖼️ Изображение загружено: {image.size} (используется в оригинальном размере)...")
-    # No resizing - use original image
-    print("✅ Изображение готово к анализу (оригинальный размер).")
-    # Return the original image and enable the button
-    return image, gr.update(interactive=True), "Изображение готово к анализу."
+    try:
+        # Проверяем, что изображение имеет правильный формат
+        if hasattr(image, 'size'):
+            print(f"🖼️ Изображение загружено: {image.size} (используется в оригинальном размере)...")
+            print("✅ Изображение готово к анализу (оригинальный размер).")
+            # Return the original image and enable the button
+            return image, gr.update(interactive=True), "Изображение готово к анализу."
+        else:
+            print("⚠️ Загруженное изображение не имеет атрибута size")
+            return None, gr.update(interactive=False), "Ошибка формата изображения. Пожалуйста, попробуйте другой файл."
+    except Exception as e:
+        print(f"❌ Ошибка при обработке загруженного изображения: {e}")
+        return None, gr.update(interactive=False), f"Ошибка при обработке изображения: {e}"
 
 
 def analyze_ui_elements(processed_image):
@@ -306,11 +350,20 @@ def analyze_ui_elements(processed_image):
         print("❌ ERROR: processed_image is None")
         return None, {"elements": []}, "Произошла ошибка: изображение для анализа отсутствует.", "Нажмите на элемент, чтобы увидеть его описание."
     
-    print(f"🤖 Отправка изображения в Vertex AI: {processed_image.size}...")
-
     try:
+        # Проверяем, что у изображения есть размер
+        if not hasattr(processed_image, 'size'):
+            print("❌ ERROR: processed_image не имеет атрибута size")
+            return processed_image, {"elements": []}, "Ошибка: некорректный формат изображения.", "Нажмите на элемент, чтобы увидеть его описание."
+            
+        print(f"🤖 Отправка изображения в Vertex AI: {processed_image.size}...")
+
         # Configure the generative model
         api_key = get_api_key(PROJECT_ID, SECRET_ID)
+        if not api_key:
+            print("❌ ERROR: Не удалось получить API ключ")
+            return processed_image, {"elements": []}, "Ошибка: не удалось получить API ключ для Vertex AI.", "Нажмите на элемент, чтобы увидеть его описание."
+            
         genai.configure(api_key=api_key)
 
         # Create the model instance
@@ -321,7 +374,17 @@ def analyze_ui_elements(processed_image):
         
         # Clean up the response
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
-        json_response = json.loads(cleaned_response)
+        
+        try:
+            json_response = json.loads(cleaned_response)
+        except json.JSONDecodeError as e:
+            print(f"❌ Ошибка при разборе JSON ответа: {e}")
+            print(f"Полученный ответ: {cleaned_response[:200]}...")
+            return processed_image, {"elements": []}, f"Ошибка при разборе ответа от Vertex AI: {e}", "Нажмите на элемент, чтобы увидеть его описание."
+        
+        if not isinstance(json_response, dict) or "elements" not in json_response:
+            print(f"❌ Неверный формат ответа от модели: {json_response}")
+            return processed_image, {"elements": []}, "Ошибка: неверный формат ответа от модели.", "Нажмите на элемент, чтобы увидеть его описание."
         
         print(f"✅ Анализ успешно завершен: найдено {len(json_response.get('elements', []))} элементов.")
         
@@ -330,6 +393,8 @@ def analyze_ui_elements(processed_image):
 
     except Exception as e:
         print(f"❌ Произошла ошибка во время анализа: {e}")
+        import traceback
+        traceback.print_exc()
         return processed_image, {"elements": []}, f"Ошибка анализа: {e}", "Нажмите на элемент, чтобы увидеть его описание."
 
 
@@ -384,7 +449,8 @@ def main():
                     label="Описание элемента",
                     value="Нажмите на элемент, чтобы увидеть его описание.",
                     interactive=False,
-                    lines=3
+                    lines=3,
+                    elem_id="element_info_output"
                 )
 
         # Feedback section
@@ -436,12 +502,17 @@ def main():
     # Launch the Gradio app
     print("🚀 Запускаем Gradio приложение...")
     # To make it accessible on the local network and create a public link
-    demo.launch(server_name="127.0.0.1", server_port=7862, share=True, debug=True)
+    demo.launch(
+        server_name="127.0.0.1", 
+        server_port=7863, 
+        share=True, 
+        debug=True
+    )
 
     print("\n" + "="*50)
     print("✅ Приложение запущено!")
     print("🔗 Публичная ссылка (для доступа откуда угодно): найдите в строке выше, она выглядит как https://....gradio.live")
-    print(f"🏠 Локальная ссылка (для этого компьютера): http://127.0.0.1:7862")
+    print(f"🏠 Локальная ссылка (для этого компьютера): http://127.0.0.1:7863")
     print("="*50 + "\n")
 
 
