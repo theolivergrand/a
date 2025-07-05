@@ -46,8 +46,8 @@ test:
 	@cd desktop_analyzer && python -m pytest . || echo "No tests found or pytest not installed"
 
 run:
-	@echo "🚀 Running application..."
-	@cd desktop_analyzer && python main.py
+	@echo "🚀 Running refactored application..."
+	@cd desktop_analyzer && python app.py
 
 docs:
 	@echo "📚 Generating documentation..."
