@@ -1,4 +1,4 @@
-google-cloud-aiplatform
-gradio
+PyQt6
+Pillow
 google-generativeai
 google-cloud-secret-manager 
