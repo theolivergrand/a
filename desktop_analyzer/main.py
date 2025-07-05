@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, 
     QFileDialog, QPushButton, QHBoxLayout, QListWidget, QListWidgetItem,
     QSplitter, QMessageBox, QTextEdit, QGroupBox, QScrollArea, QDialog,
-    QMenu, QInputDialog
+    QMenu, QInputDialog, QShortcut, QKeySequence
 )
 import json
 import os
@@ -170,7 +170,8 @@ class ImageCanvas(QWidget):
         
         pil_image = Image.open(image_path)
         json_data, status_msg = analyze_ui_elements(pil_image)
-        self.main_window.statusBar().showMessage(status_msg)
+        if hasattr(self.main_window, 'statusBar') and callable(self.main_window.statusBar):
+            self.main_window.statusBar().showMessage(status_msg)
         
         if json_data and "elements" in json_data:
             self.boxes = [
@@ -265,15 +266,20 @@ class ImageCanvas(QWidget):
 
         # Handle dragging
         if self.selected_box and self.selected_box.is_dragging:
-            # Move the original, unscaled rectangle
             new_top_left_scaled = event.pos() - self.drag_start_position
             new_top_left_unscaled = (new_top_left_scaled - self.offset) / self.scale
-            # Convert to QPoint properly
             if hasattr(new_top_left_unscaled, 'toPoint'):
                 point = new_top_left_unscaled.toPoint()
             else:
                 point = QPoint(int(new_top_left_unscaled.x()), int(new_top_left_unscaled.y()))
-            self.selected_box.rect.moveTo(point)
+            # Ограничение перемещения рамки размерами изображения
+            img_w = self.pixmap.width() if self.pixmap else 0
+            img_h = self.pixmap.height() if self.pixmap else 0
+            rect = self.selected_box.rect
+            w, h = rect.width(), rect.height()
+            x = max(0, min(point.x(), img_w - w))
+            y = max(0, min(point.y(), img_h - h))
+            self.selected_box.rect.moveTo(QPoint(x, y))
             self.update()
             self.setCursor(QCursor(Qt.CursorShape.SizeAllCursor))
             return
@@ -358,6 +364,18 @@ class ImageCanvas(QWidget):
             else:
                 new_rect.setBottom(new_rect.top() + min_size)
         
+        # Ограничение размеров рамки размерами изображения
+        img_w = self.pixmap.width() if self.pixmap else 0
+        img_h = self.pixmap.height() if self.pixmap else 0
+        if new_rect.left() < 0:
+            new_rect.setLeft(0)
+        if new_rect.top() < 0:
+            new_rect.setTop(0)
+        if new_rect.right() > img_w:
+            new_rect.setRight(img_w)
+        if new_rect.bottom() > img_h:
+            new_rect.setBottom(img_h)
+
         # Update the bounding box
         self.selected_box.rect = new_rect
         self.update()
@@ -477,7 +495,7 @@ class FullScreenMarkupWindow(QDialog):
         super().__init__(parent)
         self.parent_window = parent
         self.canvas_data = canvas_data  # Contains image path, boxes, etc.
-        
+        self.deleted_boxes_stack = []  # Для ctrl-z
         self.setWindowTitle("Полноэкранная разметка - Desktop UI/UX Analyzer")
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowMaximizeButtonHint | Qt.WindowType.WindowCloseButtonHint)
         self.showMaximized()
@@ -488,6 +506,11 @@ class FullScreenMarkupWindow(QDialog):
         # Load data from parent canvas
         if self.canvas_data:
             self.load_canvas_data()
+        # Подключаем обработку ctrl-z
+        self.shortcut_undo = QShortcut(QKeySequence("Ctrl+Z"), self)
+        self.shortcut_undo.activated.connect(self.undo_delete_box)
+        # Для хранения текущего выбранного бокса
+        self.current_box = None
     
     def setup_ui(self):
         """Setup the main UI components."""
@@ -659,19 +682,76 @@ class FullScreenMarkupWindow(QDialog):
         if box is None:
             self.elements_list.clearSelection()
             self.feedback_text.clear()
+            self.current_box = None
             return
-            
-        # Select corresponding item in list
+        self.current_box = box
+        # Выделяем элемент в списке
         for i in range(self.elements_list.count()):
             item = self.elements_list.item(i)
             item_box = item.data(Qt.ItemDataRole.UserRole)
             if item_box == box:
                 item.setSelected(True)
                 self.elements_list.scrollToItem(item)
-                # Load existing feedback if any
                 feedback = getattr(box, 'feedback', '')
                 self.feedback_text.setPlainText(feedback)
                 break
+        # Открываем всплывающее окно с описанием и кнопками
+        self.show_box_action_dialog(box)
+    def show_box_action_dialog(self, box):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Действия с элементом")
+        layout = QVBoxLayout(dialog)
+        # Описание
+        desc_label = QLabel(f"Описание: {box.description}")
+        layout.addWidget(desc_label)
+        # Обратная связь
+        feedback_edit = QTextEdit()
+        feedback_edit.setPlainText(getattr(box, 'feedback', ''))
+        layout.addWidget(feedback_edit)
+        # Кнопки
+        btn_layout = QHBoxLayout()
+        accept_btn = QPushButton("✔ Принять")
+        delete_btn = QPushButton("✖ Удалить")
+        unfreeze_btn = QPushButton("🔓 Разморозить")
+        unfreeze_btn.setVisible(getattr(box, 'is_accepted', False))
+        btn_layout.addWidget(accept_btn)
+        btn_layout.addWidget(delete_btn)
+        btn_layout.addWidget(unfreeze_btn)
+        layout.addLayout(btn_layout)
+        # Логика кнопок
+        def accept_box():
+            box.is_accepted = True
+            accept_btn.setEnabled(False)
+            unfreeze_btn.setVisible(True)
+            dialog.accept()
+            self.canvas.update()
+        def delete_box():
+            self.deleted_boxes_stack.append((box, self.canvas.boxes.index(box)))
+            self.canvas.boxes.remove(box)
+            self.current_box = None
+            dialog.accept()
+            self.populate_element_list()
+            self.canvas.update()
+        def unfreeze_box():
+            box.is_accepted = False
+            accept_btn.setEnabled(True)
+            unfreeze_btn.setVisible(False)
+            dialog.accept()
+            self.canvas.update()
+        accept_btn.clicked.connect(accept_box)
+        delete_btn.clicked.connect(delete_box)
+        unfreeze_btn.clicked.connect(unfreeze_box)
+        # Сохраняем обратную связь при закрытии
+        def save_feedback():
+            box.feedback = feedback_edit.toPlainText().strip()
+        dialog.accepted.connect(save_feedback)
+        dialog.exec()
+    def undo_delete_box(self):
+        if self.deleted_boxes_stack:
+            box, idx = self.deleted_boxes_stack.pop()
+            self.canvas.boxes.insert(idx, box)
+            self.populate_element_list()
+            self.canvas.update()
     
     def on_list_item_clicked(self, item):
         """Handle element list item selection."""
