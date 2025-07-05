@@ -155,3 +155,4 @@ temp_images/
 # Logs
 *.log
 logs/ 
+/.cursor/rules

@@ -1,0 +1,92 @@
+<mxfile host="65bd71144e">
+    <diagram name="Desktop Analyzer Architecture" id="architecture-page">
+        <mxGraphModel dx="1674" dy="904" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="mainWindow" value="MainWindow&#10;(Главное окно)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="50" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="modeSwitch" value="Mode Switch Button&#10;(Переключатель режимов)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#F57C00;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="150" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="normalMode" value="Normal Mode&#10;(Обычный режим)&#10;&#10;• Панели справа&#10;• Ограниченный размер&#10;• Базовые функции" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E8;strokeColor=#388E3C;fontSize=12;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="240" width="180" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="markupMode" value="Markup Mode&#10;(Режим разметки)&#10;&#10;• Полный экран&#10;• Плавающие панели&#10;• Расширенные функции" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E8;strokeColor=#388E3C;fontSize=12;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="240" width="180" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="sharedComponents" value="Общие компоненты" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="380" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="imageCanvas" value="ImageCanvas&#10;(Канва изображения)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="460" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="boundingBox" value="BoundingBox&#10;(Ограничивающие рамки)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="460" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="elementList" value="ElementList&#10;(Список элементов)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="460" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="feedbackSystem" value="Feedback System&#10;(Система обратной связи)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="460" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="newFeatures" value="Новые функции" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#F57C00;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="560" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="resizeFunc" value="Resize Handles&#10;(Изменение размера)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#F57C00;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="150" y="640" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="individualFeedback" value="Individual Feedback&#10;(Индивидуальная обратная связь)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#F57C00;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="640" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="mainWindow" target="modeSwitch" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="modeSwitch" target="normalMode" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="modeSwitch" target="markupMode" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="normalMode" target="sharedComponents" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="190" y="380" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="conn5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="markupMode" target="sharedComponents" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="610" y="380" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="conn6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sharedComponents" target="imageCanvas" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sharedComponents" target="boundingBox" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sharedComponents" target="elementList" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sharedComponents" target="feedbackSystem" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="boundingBox" target="newFeatures" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="newFeatures" target="resizeFunc" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="newFeatures" target="individualFeedback" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" value="Легенда:&#10;&#10;🔵 Основные компоненты&#10;🟢 Режимы работы&#10;🟠 Новые функции&#10;🟣 Общие элементы" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#616161;fontSize=11;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="50" width="150" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="versionInfo" value="Desktop UI/UX Analyzer v2.0&#10;Дата: 07.01.2025&#10;Автор: AI Assistant" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#616161;fontSize=10;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="50" width="150" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
