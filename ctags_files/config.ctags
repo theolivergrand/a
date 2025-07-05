@@ -1,0 +1,33 @@
+# General ctags configuration
+--recurse=yes
+--tag-relative=yes
+--exclude=.git
+--exclude=__pycache__
+--exclude=*.pyc
+--exclude=.venv
+--exclude=venv
+--exclude=node_modules
+--exclude=.tox
+--exclude=.pytest_cache
+--exclude=*.egg-info
+--exclude=build
+--exclude=dist
+--exclude=.mypy_cache
+--exclude=.coverage
+--exclude=htmlcov
+--exclude=docs/_build
+--exclude=.idea
+--exclude=.vscode
+--exclude=*.log
+--exclude=gradio_cached_examples
+--exclude=flagged
+--exclude=uploads
+--exclude=temp_images
+--exclude=logs
+
+# File type mappings
+--langmap=Python:+.pyi
+
+# Output format
+--sort=yes
+--format=2

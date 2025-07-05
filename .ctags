@@ -1,0 +1,3 @@
+# Main ctags configuration - loads settings from ctags_files directory
+--options=ctags_files/config.ctags
+--options=ctags_files/python.ctags

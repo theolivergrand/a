@@ -156,3 +156,11 @@ temp_images/
 *.log
 logs/ 
 /.cursor/rules
+
+# Ctags files
+tags
+tags.lock
+tags.temp
+TAGS
+.tags
+.tags1
