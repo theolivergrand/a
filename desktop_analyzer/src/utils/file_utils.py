@@ -221,6 +221,27 @@ class FileManager:
             print(f"❌ Error exporting analysis {file_path}: {e}")
             return False
 
+    @staticmethod
+    def get_file_extension(file_path: str) -> str:
+        """Return file extension in lowercase (including dot)."""
+        return os.path.splitext(file_path)[1].lower()
+
+    @staticmethod
+    def generate_timestamp_filename(prefix: str, suffix: str, extension: str) -> str:
+        """Generate filename with current timestamp.
+
+        Example: generate_timestamp_filename("report", "result", "json") ->
+        "report_20240101T120000_result.json"
+        """
+        timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+        ext = extension if extension.startswith(".") else f".{extension}"
+        return f"{prefix}_{timestamp}_{suffix}{ext}"
+
 
 # Global file manager instance
 file_manager = FileManager()
+
+# --- Backward compatibility alias ---
+# Некоторые модули и тесты могут ссылаться на legacy-имя `FileUtils`.
+# Сохраняем совместимость через алиас на актуальный класс `FileManager`.
+FileUtils = FileManager
